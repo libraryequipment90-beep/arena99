@@ -1,15 +1,10 @@
 :root {
   --bg: #0b0e14;
-  --bg2: #11161f;
-  --bg3: #171d28;
   --card: #1a2130;
   --line: #2a3344;
   --gold: #f5c518;
-  --gold2: #ffd95a;
   --red: #e11d2e;
   --green: #22c55e;
-  --blue: #3b82f6;
-  --pink: #ec4899;
   --text: #f3f6fb;
   --muted: #9aa6b8;
   --header: #0d1118;
@@ -68,7 +63,7 @@ button { cursor: pointer; }
 .nav {
   display: flex; gap: 4px; flex: 1; overflow-x: auto;
 }
-.nav a, .nav button.linkish {
+.nav a {
   color: var(--muted);
   font-size: 12px;
   font-weight: 700;
@@ -101,7 +96,6 @@ button { cursor: pointer; }
 .wallet-chip span { color: var(--gold); }
 
 .page { max-width: 1280px; margin: 0 auto; padding: 16px; }
-.hero-wrap { position: relative; }
 .promo-strip {
   background: linear-gradient(90deg, #7a1c12, #c2410c 40%, #7a1c12);
   color: #fff; text-align: center;
@@ -156,7 +150,6 @@ button { cursor: pointer; }
 .g-2 { grid-template-columns: 1fr 1fr; }
 .g-3 { grid-template-columns: repeat(3, 1fr); }
 .g-4 { grid-template-columns: repeat(4, 1fr); }
-.g-6 { grid-template-columns: repeat(6, 1fr); }
 
 .card {
   background: var(--card);
@@ -403,11 +396,11 @@ button { cursor: pointer; }
 @media (max-width: 980px) {
   .nav { display: none; }
   .mobile-nav { display: flex; }
-  .footer-inner, .g-4, .g-6, .g-3 { grid-template-columns: 1fr 1fr; }
+  .footer-inner, .g-4, .g-3 { grid-template-columns: 1fr 1fr; }
   .slide h2 { font-size: 28px; }
   .g-sports { grid-template-columns: 1fr !important; }
 }
 @media (max-width: 640px) {
-  .g-2, .g-4, .g-6, .footer-inner { grid-template-columns: 1fr; }
+  .g-2, .g-4, .footer-inner { grid-template-columns: 1fr; }
   .top-actions .btn { padding: 8px 10px; }
 }

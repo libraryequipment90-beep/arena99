@@ -79,7 +79,7 @@ function Engine(props) {
   return <C {...props} />
 }
 
-function CrashGame({ stake, setStake, mustLogin, user, placeBet, settle, notify, game }) {
+function CrashGame({ stake, setStake, mustLogin, placeBet, settle, notify, game }) {
   const [mult, setMult] = useState(1)
   const [phase, setPhase] = useState('idle')
   const [crashAt, setCrashAt] = useState(0)
@@ -163,8 +163,7 @@ function CrashGame({ stake, setStake, mustLogin, user, placeBet, settle, notify,
   )
 }
 
-function RouletteGame({ stake, spinBet }) {
-  const nums = [0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26]
+function RouletteGame({ spinBet }) {
   const reds = new Set([1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36])
   const [sel, setSel] = useState([])
   const [last, setLast] = useState(null)
@@ -272,7 +271,7 @@ function PlinkoGame({ stake, spinBet }) {
   )
 }
 
-function MinesGame({ stake, mustLogin, user, placeBet, settle, notify, game }) {
+function MinesGame({ stake, mustLogin, placeBet, settle, notify, game }) {
   const [mines, setMines] = useState(3)
   const [board, setBoard] = useState([])
   const [alive, setAlive] = useState(false)
@@ -343,8 +342,6 @@ function ColorGame({ stake, spinBet }) {
     const roll = Math.random()
     const out = roll < 0.45 ? 'red' : roll < 0.9 ? 'green' : 'violet'
     setRes(out)
-    const win = out === c || (out === 'violet' && (c === 'red' || c === 'green') && Math.random() < 0)
-    const mult = c === 'violet' ? 4.5 : 2
     spinBet(c, out === c, out === c ? (c === 'violet' ? 4.5 : 2) : 0.0001)
   }
   return (
@@ -582,7 +579,6 @@ function CrazyWheel({ spinBet }) {
   function play() {
     const s = slots[Math.floor(Math.random() * slots.length)]
     setLand(s)
-    const win = s !== '1'
     const mult = s === 'BONUS' ? 15 : Number(s)
     spinBet(s, true, s === '1' ? 1 : mult)
   }

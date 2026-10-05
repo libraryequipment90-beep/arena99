@@ -85,7 +85,7 @@ export default function App() {
 
       <main className="main">
         <Routes>
-          <Route path="/" element={<Home onAuth={() => setAuth('in')} />} />
+          <Route path="/" element={<Home />} />
           <Route path="/casino" element={<Casino />} />
           <Route path="/live" element={<LiveCasino />} />
           <Route path="/sports" element={<Sports />} />
@@ -97,7 +97,7 @@ export default function App() {
           <Route path="/profile" element={<Profile onAuth={() => setAuth('in')} />} />
           <Route path="/game/:id" element={<GamePage onAuth={() => setAuth('in')} />} />
           <Route path="/about" element={<About />} />
-          <Route path="*" element={<Home onAuth={() => setAuth('in')} />} />
+          <Route path="*" element={<Home />} />
         </Routes>
       </main>
 

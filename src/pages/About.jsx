@@ -1,9 +1,8 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { faqs, img } from '../data.js'
 import { Photo } from '../components.jsx'
 
 export default function About() {
-  const [lang, setLang] = useState('en')
   return (
     <div className="page">
       <div className="game-hero" style={{ marginBottom: 16 }}>
@@ -15,13 +14,10 @@ export default function About() {
         <p style={{ marginTop: 10, color: '#9aa6b8' }}>No real money is involved. Play responsibly. 18+ only.</p>
       </div>
       <div className="section-head"><h3>Frequently Asked Questions</h3></div>
-      <div className="tabs">
-        {['en', 'hi'].map((l) => <button key={l} className={'tab' + (lang === l ? ' on' : '')} onClick={() => setLang(l)}>{l === 'en' ? 'English' : 'Hindi'}</button>)}
-      </div>
       <div className="faq">
         {faqs.map((f) => (
           <details key={f.q}>
-            <summary>{lang === 'hi' ? f.q : f.q}</summary>
+            <summary>{f.q}</summary>
             <p>{f.a}</p>
           </details>
         ))}

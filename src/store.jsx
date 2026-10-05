@@ -21,8 +21,7 @@ function load() {
   } catch {}
   return {
     user: null,
-    users: {},
-    toast: ''
+    users: {}
   }
 }
 
@@ -31,7 +30,7 @@ export function StoreProvider({ children }) {
   const [toast, setToast] = useState('')
 
   useEffect(() => {
-    localStorage.setItem(KEY, JSON.stringify({ ...state, toast: undefined }))
+    localStorage.setItem(KEY, JSON.stringify(state))
   }, [state])
 
   useEffect(() => {
@@ -88,14 +87,6 @@ export function StoreProvider({ children }) {
       logout() {
         setState((s) => ({ ...s, user: null }))
         setToast('Logged out')
-      },
-
-      requireUser() {
-        if (!state.user) {
-          setToast('Please login to continue')
-          return false
-        }
-        return true
       },
 
       deposit(amount, method) {

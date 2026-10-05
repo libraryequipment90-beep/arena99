@@ -32,17 +32,6 @@ export default function Home() {
         {slides.map((_, n) => <button key={n} className={'dot' + (n === i ? ' on' : '')} onClick={() => setI(n)} />)}
       </div>
 
-      <div className="section">
-        <div className="providers">
-          {providers.map((p) => (
-            <div className="provider" key={p.name}>
-              <Photo src={p.img} alt={p.name} />
-              <span>{p.name}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
       <div className="grid g-2 section">
         <Link to="/sports" className="big-tile">
           <Photo src={img.cricket} alt="Sportsbook" />

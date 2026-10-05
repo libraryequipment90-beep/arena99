@@ -69,22 +69,11 @@ export const providers = [
 ]
 
 export const sports = [
-  { id: 'cricket', name: 'Cricket', img: img.cricket },
-  { id: 'football', name: 'Football', img: img.football },
-  { id: 'tennis', name: 'Tennis', img: img.tennis },
-  { id: 'kabaddi', name: 'Kabaddi', img: img.kabaddi },
-  { id: 'basketball', name: 'Basketball', img: img.basketball }
-]
-
-export const matches = [
-  { id: 'm1', sport: 'cricket', league: 'ICC', a: 'India', b: 'West Indies', live: true, odds: [1.72, 2.15], lay: [1.78, 2.22], markets: ['Match Winner'], img: img.cricket },
-  { id: 'm2', sport: 'cricket', league: 'ICC', a: 'Pakistan', b: 'Bangladesh', live: true, odds: [1.64, 2.40], lay: [1.70, 2.48], markets: ['Match Winner'], img: img.stadium },
-  { id: 'm3', sport: 'cricket', league: 'ICC UAE', a: 'UAE', b: 'Namibia', live: false, odds: [1.90, 1.95], lay: [1.96, 2.02], markets: ['Match Winner'], img: img.cricket },
-  { id: 'm4', sport: 'football', league: 'Friendly', a: 'India', b: 'Brazil', live: false, odds: [8.5, 1.22], lay: [9.2, 1.26], markets: ['1X2'], img: img.football },
-  { id: 'm5', sport: 'football', league: 'EPL', a: 'Arsenal', b: 'Chelsea', live: true, odds: [2.10, 3.40, 3.20], lay: [2.18, 3.55, 3.32], markets: ['1X2'], img: img.crowd },
-  { id: 'm6', sport: 'tennis', league: 'ATP', a: 'Alcaraz', b: 'Sinner', live: true, odds: [1.85, 2.05], lay: [1.90, 2.12], markets: ['Match Winner'], img: img.tennis },
-  { id: 'm7', sport: 'kabaddi', league: 'PKL', a: 'Patna Pirates', b: 'Bengaluru Bulls', live: false, odds: [1.95, 1.88], lay: [2.02, 1.94], markets: ['Match Winner'], img: img.kabaddi },
-  { id: 'm8', sport: 'basketball', league: 'NBA', a: 'Lakers', b: 'Celtics', live: false, odds: [1.92, 1.92], lay: [1.98, 1.98], markets: ['Moneyline'], img: img.basketball }
+  { id: 'cricket', name: 'Cricket' },
+  { id: 'football', name: 'Football' },
+  { id: 'tennis', name: 'Tennis' },
+  { id: 'kabaddi', name: 'Kabaddi' },
+  { id: 'basketball', name: 'Basketball' }
 ]
 
 export const slides = [

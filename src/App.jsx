@@ -153,12 +153,27 @@ export default function App() {
             <p style={{ color: '#9aa6b8', fontSize: 13, marginBottom: 12 }}>Use any 10-digit number. Demo OTP is <b>123456</b>.</p>
             <div className="field">
               <label>Mobile number</label>
-              <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="98xxxxxxxx" />
+              <input
+                type="tel"
+                inputMode="numeric"
+                autoComplete="tel"
+                maxLength={10}
+                value={phone}
+                onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                placeholder="98xxxxxxxx"
+              />
             </div>
             {sent && (
               <div className="field">
                 <label>OTP</label>
-                <input value={otp} onChange={(e) => setOtp(e.target.value)} placeholder="123456" />
+                <input
+                  type="tel"
+                  inputMode="numeric"
+                  maxLength={6}
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  placeholder="123456"
+                />
               </div>
             )}
             {err && <p style={{ color: '#fca5a5', marginBottom: 10 }}>{err}</p>}

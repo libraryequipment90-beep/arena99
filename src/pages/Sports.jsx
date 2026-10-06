@@ -26,10 +26,12 @@ export default function Sports() {
   function confirm() {
     if (!user) return notify('Please login to continue')
     if (slip.m.status === 'post') return notify('Match already finished')
+    const n = Number(stake)
+    if (!Number.isFinite(n) || n < 10) return notify('Minimum stake is ₹10')
     const r = placeBet({
       game: 'sportsbook',
       pick: `${slip.m.a} vs ${slip.m.b} • ${slip.label}`,
-      stake,
+      stake: n,
       odds: slip.odd,
       meta: { matchId: slip.m.id, team: slip.label, side: 'back' }
     })
@@ -93,7 +95,7 @@ export default function Sports() {
               <div className="chip-row" style={{ marginBottom: 10 }}>
                 {[50, 100, 250, 500, 1000].map((n) => <button key={n} className="chip" onClick={() => setStake(n)}>{n}</button>)}
               </div>
-              <p style={{ marginBottom: 10 }}>Potential return <b>{inr(stake * slip.odd)}</b></p>
+              <p style={{ marginBottom: 10 }}>Potential return <b>{inr((Number(stake) || 0) * slip.odd)}</b></p>
               <button className="btn btn-gold" style={{ width: '100%' }} onClick={confirm}>Place Bet</button>
             </>
           )}

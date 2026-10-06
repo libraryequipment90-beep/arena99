@@ -7,7 +7,7 @@ export default function LiveCasino() {
   return (
     <div className="page">
       <div className="section-head"><h3>Live Casino</h3></div>
-      <p style={{ color: '#9aa6b8', marginBottom: 14 }}>Studio-style tables with instant settlement. Demo dealers, real-feeling pace.</p>
+      <p style={{ color: '#9aa6b8', marginBottom: 14 }}>LIVE tables are open now. Tap Join Table to sit with a dealer, see viewers and play the current round.</p>
       <div className="grid g-4">
         {live.map((g) => <GameCard key={g.id} g={g} />)}
       </div>

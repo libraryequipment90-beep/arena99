@@ -23,10 +23,12 @@ export default function Exchange() {
   function confirm() {
     if (!user) return notify('Please login to continue')
     if (sel.m.status === 'post') return notify('Match already finished')
+    const n = Number(stake)
+    if (!Number.isFinite(n) || n < 10) return notify('Minimum stake is ₹10')
     const r = placeBet({
       game: 'exchange',
       pick: `${sel.side.toUpperCase()} ${sel.team}`,
-      stake,
+      stake: n,
       odds: sel.odd,
       meta: { matchId: sel.m.id, team: sel.team, side: sel.side }
     })
@@ -84,7 +86,7 @@ export default function Exchange() {
               <Photo src={sportThumb(sel.m.sport)} alt="" className="slip-img" />
               <p style={{ margin: '10px 0' }}><b>{sel.side.toUpperCase()}</b> {sel.team}<br />@{sel.odd}</p>
               <div className="field"><label>Stake / Liability</label><input type="number" value={stake} onChange={(e) => setStake(e.target.value)} /></div>
-              <p style={{ marginBottom: 10 }}>Est. profit <b>{inr(stake * (sel.odd - 1))}</b></p>
+              <p style={{ marginBottom: 10 }}>Est. profit <b>{inr((Number(stake) || 0) * (sel.odd - 1))}</b></p>
               <button className="btn btn-gold" style={{ width: '100%' }} onClick={confirm}>Confirm</button>
             </>
           )}

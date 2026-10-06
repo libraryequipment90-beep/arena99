@@ -27,6 +27,7 @@ export function LiveProvider({ children }) {
     async function load() {
       try {
         const r = await fetch('/api/live')
+        if (!r.ok) throw new Error('live')
         const j = await r.json()
         if (stop) return
         setMatches(j.matches || [])

@@ -165,11 +165,62 @@ async function refresh() {
 refresh().catch((e) => console.log(e))
 setInterval(() => refresh().catch((e) => console.log(e)), 20000)
 
+const BET_MS = 12000
+const SPIN_MS = 4200
+const RESULT_MS = 3000
+const roulette = {
+  roundId: 1,
+  phase: 'betting',
+  endsAt: Date.now() + BET_MS,
+  result: null,
+  history: [],
+  viewers: 240
+}
+
+function rouletteTick() {
+  const now = Date.now()
+  roulette.viewers = Math.max(80, roulette.viewers + Math.floor(Math.random() * 9) - 4)
+  if (now < roulette.endsAt) return
+  if (roulette.phase === 'betting') {
+    roulette.phase = 'spinning'
+    roulette.result = Math.floor(Math.random() * 37)
+    roulette.endsAt = now + SPIN_MS
+  } else if (roulette.phase === 'spinning') {
+    roulette.phase = 'result'
+    roulette.history = [roulette.result, ...roulette.history].slice(0, 12)
+    roulette.endsAt = now + RESULT_MS
+  } else {
+    roulette.roundId += 1
+    roulette.phase = 'betting'
+    roulette.result = null
+    roulette.endsAt = now + BET_MS
+  }
+}
+setInterval(rouletteTick, 250)
+
+function rouletteState() {
+  return {
+    ok: true,
+    roundId: roulette.roundId,
+    phase: roulette.phase,
+    endsAt: roulette.endsAt,
+    remainMs: Math.max(0, roulette.endsAt - Date.now()),
+    result: roulette.result,
+    history: roulette.history,
+    viewers: roulette.viewers,
+    dealer: 'Ananya'
+  }
+}
+
 const server = http.createServer((req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Content-Type', 'application/json')
   if (req.url.startsWith('/api/live') || req.url === '/live') {
     res.end(JSON.stringify({ ok: true, ...cache }))
+    return
+  }
+  if (req.url.startsWith('/api/roulette')) {
+    res.end(JSON.stringify(rouletteState()))
     return
   }
   if (req.url === '/health' || req.url === '/api/health') {

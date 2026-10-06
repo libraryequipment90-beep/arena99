@@ -92,7 +92,7 @@ export function StoreProvider({ children }) {
       deposit(amount, method) {
         const n = Number(amount)
         if (!state.user) return { ok: false, error: 'Login required' }
-        if (n < 500) return { ok: false, error: 'Minimum deposit is ₹500' }
+        if (!Number.isFinite(n) || n < 500) return { ok: false, error: 'Minimum deposit is ₹500' }
         let bonus = 0
         const ok = withUser((u) => {
           bonus = u.deposited === 0 ? Math.min(n * 0.5, 10000) : 0
@@ -116,7 +116,7 @@ export function StoreProvider({ children }) {
       withdraw(amount, method) {
         const n = Number(amount)
         if (!state.user) return { ok: false, error: 'Login required' }
-        if (n < 1000) return { ok: false, error: 'Minimum withdrawal is ₹1000' }
+        if (!Number.isFinite(n) || n < 1000) return { ok: false, error: 'Minimum withdrawal is ₹1000' }
         let err = ''
         const ok = withUser((u) => {
           if (n > u.balance) { err = 'Insufficient balance'; return null }
@@ -137,7 +137,7 @@ export function StoreProvider({ children }) {
       placeBet({ game, pick, stake, odds, meta }) {
         if (!state.user) return { ok: false, error: 'Login required' }
         const n = Number(stake)
-        if (n < 10) return { ok: false, error: 'Minimum stake is ₹10' }
+        if (!Number.isFinite(n) || n < 10) return { ok: false, error: 'Minimum stake is ₹10' }
         const bet = {
           id: Date.now() + Math.random(),
           game, pick, stake: n, odds, meta, status: 'open', pnl: 0, at: Date.now()
@@ -159,11 +159,14 @@ export function StoreProvider({ children }) {
 
       settle(betId, won, payout) {
         withUser((u) => {
+          const bet = u.bets.find((b) => b.id === betId)
+          if (!bet || bet.status !== 'open') return u
+          const pay = Number(payout) || 0
           const bets = u.bets.map((b) => {
             if (b.id !== betId) return b
-            return { ...b, status: won ? 'won' : 'lost', pnl: won ? payout - b.stake : -b.stake }
+            return { ...b, status: won ? 'won' : 'lost', pnl: won ? pay - b.stake : -b.stake }
           })
-          return { ...u, bets, balance: won ? u.balance + payout : u.balance }
+          return { ...u, bets, balance: won ? u.balance + pay : u.balance }
         })
       },
 

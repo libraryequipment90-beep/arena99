@@ -2,15 +2,27 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { games } from '../data.js'
 import { inr, useStore } from '../store.jsx'
-import { Photo } from '../components.jsx'
+import { Photo, isLiveTable } from '../components.jsx'
 
 const chips = [10, 50, 100, 250, 500, 1000]
 
 export default function GamePage({ onAuth }) {
   const { id } = useParams()
-  const game = games.find((g) => g.id === id) || games[0]
+  const game = games.find((g) => g.id === id)
   const { user, placeBet, settle, notify } = useStore()
   const [stake, setStake] = useState(50)
+
+  if (!game) {
+    return (
+      <div className="page">
+        <div className="card" style={{ padding: 24, textAlign: 'center' }}>
+          <h3>Game not found</h3>
+          <p style={{ color: '#9aa6b8', margin: '10px 0 16px' }}>This title is not in the lobby.</p>
+          <Link className="btn btn-gold" to="/casino">Back to Casino</Link>
+        </div>
+      </div>
+    )
+  }
 
   function mustLogin() {
     if (!user) {
@@ -43,6 +55,7 @@ export default function GamePage({ onAuth }) {
           <Link className="more" to="/casino">Back to Lobby</Link>
         </div>
       </div>
+      {isLiveTable(game) && <LiveStudio game={game} />}
       <div className="hud">
         <div>Balance <b>{user ? inr(user.balance) : '—'}</b></div>
         <div className="chip-row">
@@ -51,7 +64,42 @@ export default function GamePage({ onAuth }) {
           ))}
         </div>
       </div>
-      <Engine game={game} stake={stake} setStake={setStake} spinBet={spinBet} mustLogin={mustLogin} user={user} placeBet={placeBet} settle={settle} notify={notify} />
+      <Engine game={game} stake={stake} setStake={setStake} spinBet={spinBet} mustLogin={mustLogin} placeBet={placeBet} settle={settle} notify={notify} />
+    </div>
+  )
+}
+
+const dealers = {
+  roulette: 'Ananya',
+  baccarat: 'Meera',
+  crazytime: 'Vikram',
+  teenpatti: 'Rohan',
+  dragontiger: 'Priya',
+  blackjack: 'Kabir',
+  andarbahar: 'Sana'
+}
+
+function LiveStudio({ game }) {
+  const [viewers, setViewers] = useState(180 + (game.id.length * 37) % 420)
+  const [sec, setSec] = useState(18)
+  useEffect(() => {
+    const t = setInterval(() => {
+      setViewers((v) => Math.max(80, v + Math.floor(Math.random() * 9) - 4))
+      setSec((s) => (s <= 1 ? 18 : s - 1))
+    }, 1000)
+    return () => clearInterval(t)
+  }, [])
+  const dealer = dealers[game.play] || 'Studio Host'
+  return (
+    <div className="live-studio">
+      <div className="live-studio-bar">
+        <span className="badge live pulse">LIVE</span>
+        <b>Table {game.name}</b>
+        <span>Dealer {dealer}</span>
+        <span>{viewers} watching</span>
+        <span>Next round 00:{String(sec).padStart(2, '0')}</span>
+      </div>
+      <p className="live-note">Join the open table. Place a stake, then play the round on the felt. Demo dealer, live-style pace.</p>
     </div>
   )
 }
@@ -75,7 +123,7 @@ function Engine(props) {
     baccarat: Baccarat,
     crazytime: CrazyWheel
   }
-  const C = map[props.game.play] || map[props.game.id] || CrashGame
+  const C = map[props.game.play] || CrashGame
   return <C {...props} />
 }
 
@@ -88,7 +136,9 @@ function CrashGame({ stake, setStake, mustLogin, placeBet, settle, notify, game 
   const raf = useRef(0)
 
   function start() {
+    if (phase === 'flying') return
     if (!mustLogin()) return
+    cancelAnimationFrame(raf.current)
     const r = placeBet({ game: game.id, pick: 'fly', stake, odds: 0, meta: '' })
     if (!r.ok) return notify(r.error)
     betRef.current = r.bet
@@ -118,7 +168,7 @@ function CrashGame({ stake, setStake, mustLogin, placeBet, settle, notify, game 
 
   function cash() {
     if (phase !== 'flying' || cashed || !betRef.current) return
-    const payout = Math.round(Number(stake) * mult)
+    const payout = Math.round(Number(betRef.current.stake) * mult)
     betRef.current._out = true
     settle(betRef.current.id, true, payout)
     setCashed(true)
@@ -155,7 +205,7 @@ function CrashGame({ stake, setStake, mustLogin, placeBet, settle, notify, game 
         <div className="row">
           <input type="number" value={stake} onChange={(e) => setStake(e.target.value)} style={{ width: 100, background: '#0f141c', color: '#fff', border: '1px solid #2a3344', borderRadius: 8, padding: 8 }} />
           {phase === 'flying'
-            ? <button className="btn btn-green" onClick={cash} disabled={cashed}>Cash Out {inr(stake * mult)}</button>
+            ? <button className="btn btn-green" onClick={cash} disabled={cashed}>Cash Out {inr((betRef.current?.stake || stake) * mult)}</button>
             : <button className="btn btn-red" onClick={start}>Bet & Fly</button>}
         </div>
       </div>
@@ -163,44 +213,152 @@ function CrashGame({ stake, setStake, mustLogin, placeBet, settle, notify, game 
   )
 }
 
+const WHEEL_ORDER = [0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26]
+const REDS = new Set([1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36])
+const SLICE = 360 / 37
+
+function pocketColor(n) {
+  if (n === 0) return 'green'
+  return REDS.has(n) ? 'red' : 'black'
+}
+
 function RouletteGame({ spinBet }) {
-  const reds = new Set([1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36])
   const [sel, setSel] = useState([])
+  const [side, setSide] = useState(null)
   const [last, setLast] = useState(null)
+  const [history, setHistory] = useState([])
+  const [angle, setAngle] = useState(0)
+  const [table, setTable] = useState(null)
+  const [remain, setRemain] = useState(12)
+  const settled = useRef(0)
+  const spun = useRef(0)
+  const pickRef = useRef(null)
+  const spinBetRef = useRef(spinBet)
+  spinBetRef.current = spinBet
+  pickRef.current = side
 
-  function color(n) {
-    if (n === 0) return 'green'
-    return reds.has(n) ? 'red' : 'black'
+  useEffect(() => {
+    let stop = false
+    async function load() {
+      try {
+        const r = await fetch('/api/roulette')
+        if (!r.ok) return
+        const j = await r.json()
+        if (stop) return
+        setTable(j)
+        setRemain(Math.ceil((j.remainMs || 0) / 1000))
+        if (j.history) setHistory(j.history)
+        if (j.phase === 'spinning' && j.result != null && spun.current !== j.roundId) {
+          spun.current = j.roundId
+          const idx = WHEEL_ORDER.indexOf(j.result)
+          const land = idx * SLICE + SLICE / 2
+          setAngle((prev) => {
+            const base = Math.ceil(prev / 360) * 360
+            return base + 360 * 6 - land
+          })
+        }
+        if (j.phase === 'result' && j.result != null && settled.current !== j.roundId) {
+          settled.current = j.roundId
+          setLast(j.result)
+          const pick = pickRef.current
+          setSide(null)
+          pickRef.current = null
+          if (pick) {
+            const result = j.result
+            let win = false
+            let mult = 2
+            if (pick.kind === 'num') {
+              win = pick.payload.includes(result)
+              mult = win ? Math.floor(36 / pick.payload.length) : 2
+            } else if (pick.kind === 'color') win = pocketColor(result) === pick.payload
+            else if (pick.kind === 'even') win = result !== 0 && result % 2 === 0
+            else if (pick.kind === 'odd') win = result % 2 === 1
+            spinBetRef.current(pick.kind + ' ' + pick.payload, win, mult)
+          }
+        }
+        if (j.phase === 'betting' && settled.current && settled.current === j.roundId - 1) {
+          setSel([])
+        }
+      } catch {}
+    }
+    load()
+    const t = setInterval(load, 800)
+    return () => { stop = true; clearInterval(t) }
+  }, [])
+
+  const betting = table?.phase === 'betting'
+  const spinning = table?.phase === 'spinning'
+
+  function lock(kind, payload) {
+    if (!betting) return
+    if (kind === 'num' && !payload.length) return
+    const next = { kind, payload }
+    setSide(next)
+    pickRef.current = next
   }
 
-  function play(kind, payload) {
-    const result = Math.floor(Math.random() * 37)
-    setLast(result)
-    let win = false
-    let mult = 2
-    if (kind === 'num') {
-      win = payload.includes(result)
-      mult = win ? Math.floor(36 / payload.length) : 2
-    } else if (kind === 'color') win = color(result) === payload
-    else if (kind === 'even') win = result !== 0 && result % 2 === 0
-    else if (kind === 'odd') win = result % 2 === 1
-    spinBet(kind + ' ' + payload, win, mult)
-  }
+  const status = !table ? 'Connecting live table…'
+    : spinning ? 'LIVE SPIN'
+    : table.phase === 'result' ? `Result ${last ?? table.result}`
+    : side ? `Locked • spin in ${remain}s`
+    : `Betting ${remain}s`
 
   return (
     <div className="game-shell">
-      <p style={{ marginBottom: 10 }}>Last: {last === null ? '—' : last} {last !== null ? color(last) : ''}</p>
+      <p className="live-note">{status}{table ? ` • ${table.viewers} watching • dealer ${table.dealer}` : ''}</p>
+      <div className="wheel-wrap">
+        <div className="wheel-pointer" />
+        <div className="wheel-frame">
+          <svg
+            className="wheel-svg"
+            viewBox="0 0 320 320"
+            style={{ transform: `rotate(${angle}deg)`, transition: spinning ? 'transform 4.2s cubic-bezier(0.12, 0.75, 0.2, 1)' : 'none' }}
+          >
+            {WHEEL_ORDER.map((n, i) => {
+              const a0 = ((i * SLICE - 90) * Math.PI) / 180
+              const a1 = (((i + 1) * SLICE - 90) * Math.PI) / 180
+              const r = 150
+              const cx = 160
+              const cy = 160
+              const x0 = cx + r * Math.cos(a0)
+              const y0 = cy + r * Math.sin(a0)
+              const x1 = cx + r * Math.cos(a1)
+              const y1 = cy + r * Math.sin(a1)
+              const fill = n === 0 ? '#166534' : REDS.has(n) ? '#b91c1c' : '#111827'
+              const mid = ((i + 0.5) * SLICE - 90) * Math.PI / 180
+              const tx = cx + 118 * Math.cos(mid)
+              const ty = cy + 118 * Math.sin(mid)
+              return (
+                <g key={n}>
+                  <path d={`M${cx} ${cy} L${x0} ${y0} A${r} ${r} 0 0 1 ${x1} ${y1} Z`} fill={fill} stroke="#c9a227" strokeWidth="1" />
+                  <text x={tx} y={ty} fill="#fff" fontSize="11" fontWeight="800" textAnchor="middle" dominantBaseline="middle" transform={`rotate(${i * SLICE + SLICE / 2} ${tx} ${ty})`}>{n}</text>
+                </g>
+              )
+            })}
+            <circle cx="160" cy="160" r="42" fill="#1a1208" stroke="#c9a227" strokeWidth="6" />
+            <circle cx="160" cy="160" r="18" fill="#c9a227" />
+          </svg>
+        </div>
+        <div className="wheel-result">
+          {spinning ? 'SPIN' : last === null ? remain : last}
+        </div>
+      </div>
+      <div className="wheel-hist">
+        {history.length ? history.map((n, i) => (
+          <span key={i} className={'rchip ' + pocketColor(n)}>{n}</span>
+        )) : <span style={{ color: '#9aa6b8' }}>Waiting for live spins…</span>}
+      </div>
       <div className="roulette-board">
         {Array.from({ length: 37 }, (_, n) => (
-          <button key={n} className={'rnum ' + color(n) + (sel.includes(n) ? ' sel' : '')} onClick={() => setSel((s) => s.includes(n) ? s.filter((x) => x !== n) : [...s, n])}>{n}</button>
+          <button key={n} disabled={!betting} className={'rnum ' + pocketColor(n) + (sel.includes(n) ? ' sel' : '')} onClick={() => setSel((s) => s.includes(n) ? s.filter((x) => x !== n) : [...s, n])}>{n}</button>
         ))}
       </div>
       <div className="row" style={{ marginTop: 12, flexWrap: 'wrap' }}>
-        <button className="btn btn-gold" onClick={() => sel.length && play('num', sel)}>Spin numbers</button>
-        <button className="btn btn-red" onClick={() => play('color', 'red')}>Red x2</button>
-        <button className="btn btn-ghost" onClick={() => play('color', 'black')}>Black x2</button>
-        <button className="btn btn-ghost" onClick={() => play('even')}>Even</button>
-        <button className="btn btn-ghost" onClick={() => play('odd')}>Odd</button>
+        <button className="btn btn-gold" disabled={!betting || !sel.length} onClick={() => lock('num', sel)}>Lock numbers</button>
+        <button className="btn btn-red" disabled={!betting} onClick={() => lock('color', 'red')}>Red x2</button>
+        <button className="btn btn-ghost" disabled={!betting} onClick={() => lock('color', 'black')}>Black x2</button>
+        <button className="btn btn-ghost" disabled={!betting} onClick={() => lock('even')}>Even</button>
+        <button className="btn btn-ghost" disabled={!betting} onClick={() => lock('odd')}>Odd</button>
       </div>
     </div>
   )
@@ -279,6 +437,7 @@ function MinesGame({ stake, mustLogin, placeBet, settle, notify, game }) {
   const betRef = useRef(null)
 
   function start() {
+    if (alive) return
     if (!mustLogin()) return
     const r = placeBet({ game: game.id, pick: mines + ' mines', stake, odds: 1, meta: '' })
     if (!r.ok) return notify(r.error)
@@ -293,7 +452,7 @@ function MinesGame({ stake, mustLogin, placeBet, settle, notify, game }) {
   const mult = useMemo(() => 1 + revealed.length * (0.35 + mines * 0.08), [revealed, mines])
 
   function click(i) {
-    if (!alive) return
+    if (!alive || !betRef.current) return
     if (revealed.includes(i)) return
     if (board.includes(i)) {
       setAlive(false)
@@ -306,8 +465,8 @@ function MinesGame({ stake, mustLogin, placeBet, settle, notify, game }) {
   }
 
   function cash() {
-    if (!alive || !revealed.length) return
-    const payout = Math.round(Number(stake) * mult)
+    if (!alive || !revealed.length || !betRef.current) return
+    const payout = Math.round(Number(betRef.current.stake) * mult)
     settle(betRef.current.id, true, payout)
     setAlive(false)
     notify('Cashed ' + inr(payout))
@@ -507,6 +666,7 @@ function Blackjack({ stake, mustLogin, placeBet, settle, notify, game }) {
   const bet = useRef(null)
 
   function deal() {
+    if (live) return
     if (!mustLogin()) return
     const r = placeBet({ game: game.id, pick: 'bj', stake, odds: 2, meta: '' })
     if (!r.ok) return notify(r.error)
@@ -522,13 +682,15 @@ function Blackjack({ stake, mustLogin, placeBet, settle, notify, game }) {
     if (handVal(np) > 21) finish(np, d, bet.current)
   }
   function finish(pp, dd, b) {
+    if (!b) return
     let dealer = [...dd]
     while (handVal(dealer) < 17) dealer.push(deckDraw())
     setD(dealer)
     const pv = handVal(pp), dv = handVal(dealer)
     const win = pv <= 21 && (dv > 21 || pv > dv)
     const push = pv === dv && pv <= 21
-    const payout = push ? Number(stake) : win ? Math.round(Number(stake) * (pv === 21 && pp.length === 2 ? 2.5 : 2)) : 0
+    const st = Number(b.stake)
+    const payout = push ? st : win ? Math.round(st * (pv === 21 && pp.length === 2 ? 2.5 : 2)) : 0
     settle(b.id, win || push, payout)
     notify(push ? 'Push' : win ? 'You win ' + inr(payout) : 'Dealer wins')
     setLive(false)
